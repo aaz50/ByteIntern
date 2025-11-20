@@ -1,0 +1,46 @@
+name: Job Tracker
+
+on:
+  schedule:
+    # Run every 6 hours
+    # Cron format: minute hour day month day-of-week
+    # 0 */6 * * * = at minute 0 of every 6th hour
+    - cron: '0 */6 * * *'
+  
+  # Allow manual trigger from Actions tab
+  workflow_dispatch:
+
+jobs:
+  check-jobs:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Run job tracker
+        env:
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          EMAIL_RECIPIENT: ${{ secrets.EMAIL_RECIPIENT }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_API_KEY: ${{ secrets.ADZUNA_API_KEY }}
+        run: python -m src.runners.local
+      
+      - name: Upload database artifact
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: jobs-database
+          path: jobs.db
+          retention-days: 30

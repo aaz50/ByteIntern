@@ -1,0 +1,5 @@
+requests==2.31.0
+python-dotenv==1.0.0
+
+# Optional: For AWS Lambda deployment (install only when needed)
+# boto3==1.34.0
