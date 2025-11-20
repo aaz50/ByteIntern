@@ -1,82 +1,128 @@
-# LinkedIn Job Tracker
+# Job Tracker
 
-Automated job posting tracker for software engineering internships with email notifications - will possibly scale to discord/telegram bots
+Automated internship tracker with email notifications for software engineering positions. Built with Python, SQLite, and the Adzuna API.
 
-## Design Principles
+## Features
 
-1. **Separation of Concerns**: Core logic is independent of deployment platform
-2. **Database Abstraction**: Easy to swap SQLite → More complex DB
-3. **Configuration Management**: Environment-based settings
-4. **Testability**: Each module can be tested independently
+- 🔍 Automated job search via Adzuna API
+- 📧 Email notifications for new postings
+- 💾 SQLite database to track seen jobs
+- ⚙️ Customizable search keywords and locations
+- 🚀 Deploy to GitHub Actions (free cloud automation)
+- 🔧 Extensible architecture for future enhancements
 
-## Setup Instructions - refer to QUICKSTART.md for detailed guide
+## Tech Stack
+
+**Backend:** Python 3.8+  
+**Database:** SQLite (local), DynamoDB-ready (AWS)  
+**API:** Adzuna Job Search API  
+**Email:** Gmail SMTP  
+**Deployment:** GitHub Actions, AWS Lambda (future)
+
+**Key Libraries:**
+- `requests` - HTTP client
+- `python-dotenv` - Environment management
+- `sqlite3` - Database interface
+
+## Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configure Environment Variables
-Copy `.env.example` to `.env` and fill in your credentials:
+### 2. Configure Environment
 
-```bash
-cp .env.example .env
+Create a `.env` file with your credentials:
+
+```env
+EMAIL_SENDER=your-email@gmail.com
+EMAIL_PASSWORD=your-gmail-app-password
+EMAIL_RECIPIENT=your-email@gmail.com
+ADZUNA_APP_ID=your-app-id
+ADZUNA_API_KEY=your-api-key
 ```
 
-Required variables:
-- `EMAIL_SENDER`: Your Gmail address
-- `EMAIL_PASSWORD`: Gmail app password (https://myaccount.google.com/apppasswords)
-- `EMAIL_RECIPIENT`: Where to send notifications
-- `ADZUNA_APP_ID`: From https://developer.adzuna.com/
-- `ADZUNA_API_KEY`: From https://developer.adzuna.com/
+**Get API Keys:**
+- **Adzuna API:** [developer.adzuna.com](https://developer.adzuna.com/) (free tier: 1000 calls/month)
+- **Gmail App Password:** [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) (requires 2FA)
 
-### 3. Test Components
-
-**Test API fetching:**
-```bash
-python -m src.core.fetcher
-```
-
-**Test email:**
-```bash
-python -m src.core.notifier
-```
-
-**Test full flow:**
-```bash
-python -m src.runners.local --check
-```
-
-### 4. Run It
+### 3. Run
 
 ```bash
-# Normal run (sends email if new jobs found)
+# Search for jobs and send email
 python -m src.runners.local
 
-# Check mode (no email)
+# Test mode (no email sent)
 python -m src.runners.local --check
 
-# Show stats
+# View database statistics
 python -m src.runners.local --stats
 
-# Test email
+# Send test email
 python -m src.runners.local --test-email
+
+# Email all jobs in database
+python -m src.runners.local --send-all
+
+# View database contents
+python view_database.py
+```
+
+## Configuration
+
+Customize search parameters in `.env`:
+
+```env
+SEARCH_KEYWORDS=software engineer intern
+SEARCH_LOCATIONS=San Francisco,New York,Remote
+MAX_DAYS_OLD=7
 ```
 
 ## Deployment
 
-### GitHub Actions (Phase 1)
-1. Push code to GitHub
-2. Add secrets to repository (Settings → Secrets)
-3. GitHub will run automatically
+### GitHub Actions (Recommended)
 
-### AWS Lambda (Phase 2 - Future)
-The `src/runners/lambda.py` file will be the Lambda handler.
+1. Push to GitHub
+2. Add secrets in **Settings → Secrets → Actions**
+3. Workflow runs automatically every 6 hours
 
-## Configuration
+See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed instructions.
 
-Edit `src/core/config.py` to customize:
-- Search keywords
-- Locations
-- How many days back to search
-- Database type
+### Future: AWS Lambda
+
+The project supports AWS Lambda deployment via `src/runners/lambda.py` with DynamoDB backend.
+
+## Project Structure
+
+```
+ByteIntern/
+├── src/
+│   ├── core/              # Business logic
+│   │   ├── config.py      # Configuration management
+│   │   ├── fetcher.py     # API client
+│   │   ├── notifier.py    # Email handler
+│   │   └── storage.py     # Database abstraction
+│   └── runners/           # Deployment entry points
+│       ├── local.py       # Local/GitHub Actions
+│       └── lambda.py      # AWS Lambda
+├── view_database.py       # Database viewer utility
+├── requirements.txt       # Dependencies
+└── .env                   # Configuration (not committed)
+```
+
+## Architecture Principles
+
+1. **Separation of Concerns:** Core logic independent of deployment
+2. **Storage Abstraction:** Easy SQLite → DynamoDB migration
+3. **Testability:** Each module can be tested independently
+4. **Configurability:** Environment-based settings
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions welcome! Feel free to open issues or submit pull requests.

@@ -43,6 +43,11 @@ def main():
         action='store_true',
         help='Show database statistics'
     )
+    parser.add_argument(
+        '--send-all', 
+        action='store_true',
+        help='Send email with ALL jobs from database'
+    )
     args = parser.parse_args()
     
     # Validate configuration
@@ -80,6 +85,42 @@ def main():
                 print(f"    Added: {job['first_seen']}")
         print()
         sys.exit(0)
+    
+    # Handle send all jobs
+    if args.send_all:
+        all_jobs = storage.get_all_jobs()
+        
+        if not all_jobs:
+            print("\n❌ No jobs in database to send.")
+            print("Run the tracker first: python -m src.runners.local\n")
+            sys.exit(1)
+        
+        print(f"\n📧 Sending email with ALL {len(all_jobs)} job(s) from database...")
+        
+        # Transform database format to match notifier format
+        jobs_for_email = []
+        for job in all_jobs:
+            jobs_for_email.append({
+                'id': job['job_id'],
+                'title': job['title'],
+                'company': job['company'],
+                'location': job['location'],
+                'url': job['url'],
+                'description': job.get('description', ''),
+                'posted_date': job.get('posted_date', ''),
+                'salary_min': job.get('salary_min'),
+                'salary_max': job.get('salary_max')
+            })
+        
+        success = notifier.send_notification(jobs_for_email)
+        
+        if success:
+            print(f"✅ Email sent with {len(jobs_for_email)} job(s)!")
+        else:
+            print(f"❌ Failed to send email")
+        
+        print()
+        sys.exit(0 if success else 1)
     
     # Main job tracking logic
     print(f"\n{'='*60}")

@@ -1,11 +1,11 @@
 # Quick Start Guide
 
-Get your job tracker running in 10 minutes!
+Get the job tracker running in 10 minutes.
 
 ## Step 1: Clone/Download the Project
 
 ```bash
-cd linkedin-job-tracker
+cd ByteIntern
 ```
 
 ## Step 2: Install Dependencies
@@ -109,7 +109,7 @@ git init
 git add .
 git commit -m "Initial commit"
 git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/linkedin-job-tracker.git
+git remote add origin https://github.com/YOUR_USERNAME/ByteIntern.git
 git push -u origin main
 ```
 
@@ -211,22 +211,9 @@ MAX_DAYS_OLD=3
 
 ## Next Steps
 
-✅ Phase 1 Complete: Working tracker with GitHub Actions!
+Once deployed to GitHub Actions, the tracker will run automatically every 6 hours. You can:
 
-**Future enhancements:**
-- Phase 2: Migrate to AWS Lambda for faster checks
-- Phase 3: Build web UI with React/TypeScript
-- Add filtering by company, salary, remote status
-- Track application status
-- Add company research integration
-
----
-
-## Pro Tips
-
-1. **Check frequently for early applications**: Edit cron to `*/30 * * * *` (every 30 min) for competitive advantage
-2. **Customize notifications**: Fork the code to send Discord/Slack messages instead
-3. **Filter results**: Add logic in `src/core/storage.py` to skip certain companies
-4. **Track applications**: Add a status column to mark "applied", "interview", etc.
-
-Happy job hunting! 🚀
+- Customize search parameters in `.env`
+- Adjust the schedule in `.github/workflows/job-tracker.yml`
+- View collected jobs with `python view_database.py`
+- Monitor execution in the GitHub Actions tab

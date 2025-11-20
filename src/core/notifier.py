@@ -154,5 +154,5 @@ if __name__ == "__main__":
     notifier = EmailNotifier()
     
     # Send test email
-    print("📧 Sending test email...")
+    print("Sending test email...")
     notifier.send_test_email()
