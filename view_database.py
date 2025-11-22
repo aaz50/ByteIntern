@@ -11,7 +11,26 @@ Usage:
 
 import sqlite3
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
+
+
+def format_timestamp(timestamp_str):
+    """Convert ISO 8601 timestamp to readable format."""
+    try:
+        # Parse ISO 8601 timestamp (UTC)
+        dt_utc = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+        
+        # Convert to EST (UTC-5)
+        dt_est = dt_utc - timedelta(hours=5)
+        
+        # Format: 11/19/2025 - 09:51 AM EST (14:51 UTC)
+        date_str = dt_est.strftime('%m/%d/%Y')
+        time_12hr = dt_est.strftime('%I:%M %p')
+        time_24hr = dt_utc.strftime('%H:%M')
+        
+        return f"{date_str} - {time_12hr} EST ({time_24hr} UTC)"
+    except (ValueError, AttributeError):
+        return timestamp_str
 
 
 def view_all_jobs(db_path='jobs.db', filter_type=None):
@@ -37,17 +56,29 @@ def view_all_jobs(db_path='jobs.db', filter_type=None):
             print("Run the tracker first: python -m src.runners.local\n")
             return
         
+        # Sort jobs by posted_date (newest first)
+        jobs_list = [dict(job) for job in jobs]
+        jobs_sorted = sorted(
+            jobs_list,
+            key=lambda x: x.get('posted_date', ''),
+            reverse=True
+        )
+        
         print(f"\n{'='*80}")
-        print(f"📊 DATABASE CONTENTS: {len(jobs)} job(s)")
+        print(f"📊 DATABASE CONTENTS: {len(jobs_sorted)} job(s)")
         print(f"{'='*80}\n")
         
-        for i, job in enumerate(jobs, 1):
+        for i, job in enumerate(jobs_sorted, 1):
             notified_status = "✅ Emailed" if job['notified'] else "📝 Not emailed yet"
             
             print(f"{i}. {job['title']}")
             print(f"   Company: {job['company']}")
             print(f"   Location: {job['location']}")
-            print(f"   Posted: {job['posted_date']}")
+            
+            # Format posted date
+            if job['posted_date']:
+                formatted_posted = format_timestamp(job['posted_date'])
+                print(f"   Posted: {formatted_posted}")
             
             # Show salary if available
             if job['salary_min'] and job['salary_max']:

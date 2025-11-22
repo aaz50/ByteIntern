@@ -8,6 +8,7 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List, Dict
+from datetime import datetime
 from src.core import config
 
 
@@ -18,6 +19,35 @@ class EmailNotifier:
         self.sender = config.EMAIL_SENDER
         self.password = config.EMAIL_PASSWORD
         self.recipient = config.EMAIL_RECIPIENT
+    
+    def format_timestamp(self, timestamp_str: str) -> str:
+        """
+        Convert ISO 8601 timestamp to readable format with EST timezone.
+        
+        Args:
+            timestamp_str: ISO 8601 timestamp (e.g., "2025-11-19T14:51:45Z")
+        
+        Returns:
+            Formatted string: "11/19/2025 - 09:51 EST (14:51 UTC)"
+        """
+        try:
+            # Parse ISO 8601 timestamp (UTC)
+            dt_utc = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            
+            # Convert to EST (UTC-5)
+            # Note: This is a simple offset. For DST handling, use pytz library
+            from datetime import timedelta
+            dt_est = dt_utc - timedelta(hours=5)
+            
+            # Format: 11/19/2025 - 09:51 EST (14:51 UTC)
+            date_str = dt_est.strftime('%m/%d/%Y')
+            time_12hr = dt_est.strftime('%I:%M %p')  # 09:51 AM
+            time_24hr = dt_utc.strftime('%H:%M')     # 14:51
+            
+            return f"{date_str} - {time_12hr} EST ({time_24hr} UTC)"
+        except (ValueError, AttributeError):
+            # Fallback if timestamp parsing fails
+            return timestamp_str
     
     def format_job_email(self, jobs: List[Dict]) -> str:
         """
@@ -32,10 +62,17 @@ class EmailNotifier:
         if not jobs:
             return "No new jobs found."
         
-        body = f"🎯 Found {len(jobs)} new software engineering internship posting(s)!\n\n"
+        # Sort jobs by posted_date (newest first)
+        sorted_jobs = sorted(
+            jobs, 
+            key=lambda x: x.get('posted_date', ''), 
+            reverse=True
+        )
+        
+        body = f"🎯 Found {len(sorted_jobs)} new software engineering internship posting(s)!\n\n"
         body += "=" * 70 + "\n\n"
         
-        for i, job in enumerate(jobs, 1):
+        for i, job in enumerate(sorted_jobs, 1):
             body += f"{i}. {job['title']}\n"
             body += f"   Company: {job['company']}\n"
             body += f"   Location: {job['location']}\n"
@@ -47,7 +84,14 @@ class EmailNotifier:
                 body += f"   Salary: {salary_min} - {salary_max}\n"
             
             body += f"   Apply: {job['url']}\n"
-            body += f"   Posted: {job.get('posted_date', 'N/A')}\n"
+            
+            # Format timestamp for readability
+            if job.get('posted_date'):
+                formatted_date = self.format_timestamp(job['posted_date'])
+                body += f"   Posted: {formatted_date}\n"
+            else:
+                body += f"   Posted: N/A\n"
+            
             body += "\n" + "-" * 70 + "\n\n"
         
         body += "\nThis is an automated message from your LinkedIn Job Tracker.\n"

@@ -112,6 +112,7 @@ def main():
                 'salary_max': job.get('salary_max')
             })
         
+        # Notifier will sort by posted_date (newest first)
         success = notifier.send_notification(jobs_for_email)
         
         if success:
